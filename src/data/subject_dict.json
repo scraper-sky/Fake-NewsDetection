@@ -1,0 +1,8 @@
+{
+    "<PAD>": 0,
+    "<UNK>": 1,
+    "news": 2,
+    "politics": 3,
+    "politicsnews": 4,
+    "worldnews": 5
+}

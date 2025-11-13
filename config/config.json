@@ -1,0 +1,32 @@
+{
+  "project_root": "/Users/athipati/personal_projects/Fake News Detection",
+  "data_path": "data",
+  "models_path": "models",
+  "results_path": "results",
+  "notebooks_path": "notebooks",
+  "raw_data_path": "data/raw",
+  "processed_data_path": "data/processed",
+  "external_data_path": "data/external",
+  "test_size": 0.2,
+  "random_state": 42,
+  "cv_folds": 5,
+  "max_features": 10000,
+  "ngram_range": [1, 2],
+  "min_df": 2,
+  "max_df": 0.95,
+  "models_to_train": [
+    "logistic_regression",
+    "random_forest",
+    "gradient_boosting",
+    "svm",
+    "naive_bayes",
+    "neural_network"
+  ],
+  "evaluation_metrics": [
+    "accuracy",
+    "precision",
+    "recall",
+    "f1_score",
+    "auc"
+  ]
+}
