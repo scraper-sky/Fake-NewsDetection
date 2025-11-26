@@ -3,12 +3,12 @@ import torch.nn as nn
 import torch.nn.functional as f
 import torch.optim as optim
 
-class NewsPredictor(nn.module):
+class NewsPredictor(nn.Module):
     def __init__(self, dict_size, category_size):
         super(NewsPredictor, self).__init__()
-        self.title_embedding = nn.embedding(dict_size, 128)
-        self.text_embedding = nn.embedding(dict_size, 128)
-        self.subject_embedding = nn.embedding(category_size, 8)
+        self.title_embedding = nn.Embedding(dict_size, 128)
+        self.text_embedding = nn.Embedding(dict_size, 128)
+        self.subject_embedding = nn.Embedding(category_size, 8)
 
         self.title_conv = nn.Conv1d(128, 64, kernel_size=3, stride=1, padding=0)
         self.text_conv = nn.Conv1d(128, 64, kernel_size=3, stride=1, padding=0)
@@ -24,7 +24,14 @@ class NewsPredictor(nn.module):
 
         title_embedding = title_embedding.permute(0, 2, 1)
         text_embedding = text_embedding.permute(0, 2, 1)
-        subject_embedding = subject_embedding.permute(0, 2, 1)
+        
+        if len(subject_embedding.shape) == 2:
+            subject_embedding = subject_embedding.unsqueeze(1) 
+        subject_embedding = subject_embedding.permute(0, 2, 1)  
+        
+        if subject_embedding.shape[2] < 3:
+            padding_size = 3 - subject_embedding.shape[2]
+            subject_embedding = f.pad(subject_embedding, (0, padding_size), mode='constant', value=0)
 
         title_conv = self.title_conv(title_embedding)
         text_conv = self.text_conv(text_embedding)
