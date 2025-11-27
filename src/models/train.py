@@ -72,9 +72,9 @@ def train():
     dict_size = len(vocab_dict)
     category_size = len(subject_dict)
 
-    model = NewsPredictor(dict_size, category_size, hidden_dim=128, num_layers=2, dropout=0.7).to(device)
+    model = NewsPredictor(dict_size, category_size, hidden_dim=128, num_layers=2, dropout=0.5).to(device)
     criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.000001)  # Much lower learning rate to prevent collapse
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)  # Balanced learning rate
 
     train_dataset = NewsDataset(train_split)
     val_dataset = NewsDataset(val_split)

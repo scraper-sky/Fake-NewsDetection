@@ -4,7 +4,7 @@ import torch.nn.functional as f
 import torch.optim as optim
 
 class NewsPredictor(nn.Module):
-    def __init__(self, dict_size, category_size, hidden_dim=128, num_layers=2, dropout=0.7):
+    def __init__(self, dict_size, category_size, hidden_dim=128, num_layers=2, dropout=0.5):
         super(NewsPredictor, self).__init__()
         
         # Embedding layers
