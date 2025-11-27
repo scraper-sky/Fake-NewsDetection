@@ -70,7 +70,7 @@ def train():
     model = NewsPredictor(dict_size, hidden_dim=128, num_layers=2, dropout=0.5).to(device)
     criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.00001, weight_decay=1e-5)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2, verbose=True)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
 
     train_dataset = NewsDataset(train_split)
     val_dataset = NewsDataset(val_split)
