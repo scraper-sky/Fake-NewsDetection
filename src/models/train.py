@@ -18,15 +18,13 @@ fake_train = pd.read_csv(os.path.join(id_data_dir, 'FakeIDTrain.csv'))
 true_train = pd.read_csv(os.path.join(id_data_dir, 'TrueIDTrain.csv'))
 
 train_data = pd.concat([fake_train, true_train], ignore_index=True)
-# Shuffle with stratification to ensure balanced split
 shuffled_data = train_data.sample(frac=1, random_state=229, ignore_index=True).reset_index(drop=True)
 
-# Stratified split to ensure balanced train/val distribution
 train_split, val_split = train_test_split(
     shuffled_data, 
     test_size=0.2, 
     random_state=42, 
-    stratify=shuffled_data['label']  # Ensure balanced label distribution
+    stratify=shuffled_data['label']
 )
 train_split = train_split.reset_index(drop=True)
 val_split = val_split.reset_index(drop=True)
@@ -61,20 +59,18 @@ class NewsDataset(Dataset):
         }
 
 def collate_fn(batch):
-    """Custom collate function to handle variable length sequences"""
     titles = torch.stack([item['title'] for item in batch])
     texts = torch.stack([item['text'] for item in batch])
-    subjects = torch.stack([item['subject'] for item in batch])
     labels = torch.stack([item['label'] for item in batch])
-    return titles, texts, subjects, labels
+    return titles, texts, labels
 
 def train():
     dict_size = len(vocab_dict)
-    category_size = len(subject_dict)
 
-    model = NewsPredictor(dict_size, category_size, hidden_dim=128, num_layers=2, dropout=0.5).to(device)
+    model = NewsPredictor(dict_size, hidden_dim=128, num_layers=2, dropout=0.5).to(device)
     criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.0001)  # Balanced learning rate
+    optimizer = optim.Adam(model.parameters(), lr=0.00001, weight_decay=1e-5)
+    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2, verbose=True)
 
     train_dataset = NewsDataset(train_split)
     val_dataset = NewsDataset(val_split)
@@ -88,14 +84,13 @@ def train():
         for i in range(0, sample_size, batch_size):
             batch_end = min(i + batch_size, sample_size)
             batch_data = [train_dataset[j] for j in range(i, batch_end)]
-            titles, texts, subjects, labels = collate_fn(batch_data)
+            titles, texts, labels = collate_fn(batch_data)
             
             titles = titles.to(device)
             texts = texts.to(device)
-            subjects = subjects.to(device)
             labels = labels.to(device)
             
-            outputs = model(titles, texts, subjects)
+            outputs = model(titles, texts)
             loss = criterion(outputs, labels)
             initial_losses.append(loss.item())
     
@@ -111,18 +106,15 @@ def train():
         all_preds = []
         all_labels = []
         
-        # Training phase
-        for batch_idx, (titles, texts, subjects, labels) in enumerate(train_dataloader):
+        for batch_idx, (titles, texts, labels) in enumerate(train_dataloader):
             titles = titles.to(device)
             texts = texts.to(device)
-            subjects = subjects.to(device)
             labels = labels.to(device)
             
             optimizer.zero_grad()
-            outputs = model(titles, texts, subjects)
+            outputs = model(titles, texts)
             loss = criterion(outputs, labels)
             loss.backward()
-            # Gradient clipping to prevent exploding gradients
             torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             
@@ -130,7 +122,6 @@ def train():
             all_preds.extend(outputs.detach().cpu().numpy())
             all_labels.extend(labels.cpu().numpy())
             
-            # Print progress every 100 batches with prediction stats
             if (batch_idx + 1) % 100 == 0:
                 with torch.no_grad():
                     pred_probs = outputs.detach().cpu().numpy()
@@ -138,25 +129,22 @@ def train():
                     std_pred = pred_probs.std()
                     print(f'Epoch: {epoch:3d} | Batch: {batch_idx + 1:4d}/{len(train_dataloader)} | Loss: {loss.item():.6f} | Avg Pred: {avg_pred:.4f} | Std: {std_pred:.4f}')
         
-        # Calculate training accuracy
         train_preds = (torch.tensor(all_preds) > 0.5).float()
         train_labels = torch.tensor(all_labels)
         train_acc = (train_preds == train_labels).float().mean().item()
         avg_train_loss = sum(epoch_losses) / len(epoch_losses)
         
-        # Validation phase
         model.eval()
         val_losses = []
         val_preds = []
         val_labels_list = []
         with torch.no_grad():
-            for titles, texts, subjects, labels in val_dataloader:
+            for titles, texts, labels in val_dataloader:
                 titles = titles.to(device)
                 texts = texts.to(device)
-                subjects = subjects.to(device)
                 labels = labels.to(device)
                 
-                outputs = model(titles, texts, subjects)
+                outputs = model(titles, texts)
                 loss = criterion(outputs, labels)
                 val_losses.append(loss.item())
                 val_preds.extend(outputs.cpu().numpy())
@@ -169,15 +157,15 @@ def train():
         
         model.train()
         
-        print(f'Epoch: {epoch:3d} | Train Loss: {avg_train_loss:.6f} | Train Acc: {train_acc:.4f} | Val Loss: {avg_val_loss:.6f} | Val Acc: {val_acc:.4f}')
+        scheduler.step(avg_val_loss)
+        
+        print(f'Epoch: {epoch:3d} | Train Loss: {avg_train_loss:.6f} | Train Acc: {train_acc:.4f} | Val Loss: {avg_val_loss:.6f} | Val Acc: {val_acc:.4f} | LR: {optimizer.param_groups[0]["lr"]:.8f}')
     
-    # Save model
     model_path = 'src/models/NewsPredictor.pth'
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     torch.save(model.state_dict(), model_path)
     print(f'Model saved to {model_path}')
     
-    # Evaluate on actual test set
     print('\n' + '=' * 50)
     print('Evaluating on Test Set')
     print('=' * 50)
@@ -194,13 +182,12 @@ def train():
     test_labels_list = []
     
     with torch.no_grad():
-        for titles, texts, subjects, labels in test_dataloader:
+        for titles, texts, labels in test_dataloader:
             titles = titles.to(device)
             texts = texts.to(device)
-            subjects = subjects.to(device)
             labels = labels.to(device)
             
-            outputs = model(titles, texts, subjects)
+            outputs = model(titles, texts)
             loss = criterion(outputs, labels)
             test_losses.append(loss.item())
             test_preds.extend(outputs.cpu().numpy())
