@@ -24,7 +24,7 @@ with open(os.path.join(data_dir, 'vocab_dict.json'), 'r') as file:
 with open(os.path.join(data_dir, 'subject_dict.json'), 'r') as file:
     subject_dict = json.load(file)
 
-num_epochs = 100
+num_epochs = 10
 batch_size = 32  
 
 class NewsDataset(Dataset):
@@ -60,9 +60,9 @@ def train():
     dict_size = len(vocab_dict)
     category_size = len(subject_dict)
 
-    model = NewsPredictor(dict_size, category_size).to(device)
+    model = NewsPredictor(dict_size, category_size, hidden_dim=128, num_layers=2, dropout=0.3).to(device)
     criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
+    optimizer = optim.Adam(model.parameters(), lr=0.0001)  # Lower learning rate for stability
 
     dataset = NewsDataset(shuffled_data)
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True, collate_fn=collate_fn, num_workers=0)
@@ -104,6 +104,8 @@ def train():
             outputs = model(titles, texts, subjects)
             loss = criterion(outputs, labels)
             loss.backward()
+            # Gradient clipping to prevent exploding gradients
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
             optimizer.step()
             
             epoch_losses.append(loss.item())
