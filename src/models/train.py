@@ -77,10 +77,10 @@ def train():
     model.eval()
     initial_losses = []
     with torch.no_grad():
-        sample_size = min(100, len(shuffled_data))
+        sample_size = min(100, len(train_split))
         for i in range(0, sample_size, batch_size):
             batch_end = min(i + batch_size, sample_size)
-            batch_data = [dataset[j] for j in range(i, batch_end)]
+            batch_data = [train_dataset[j] for j in range(i, batch_end)]
             titles, texts, subjects, labels = collate_fn(batch_data)
             
             titles = titles.to(device)
