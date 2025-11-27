@@ -6,6 +6,7 @@ import pandas as pd
 import json
 from src.models.model import NewsPredictor
 import os
+from sklearn.model_selection import train_test_split
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device: {device}')
@@ -17,12 +18,18 @@ fake_train = pd.read_csv(os.path.join(id_data_dir, 'FakeIDTrain.csv'))
 true_train = pd.read_csv(os.path.join(id_data_dir, 'TrueIDTrain.csv'))
 
 train_data = pd.concat([fake_train, true_train], ignore_index=True)
+# Shuffle with stratification to ensure balanced split
 shuffled_data = train_data.sample(frac=1, random_state=229, ignore_index=True).reset_index(drop=True)
 
-# Split into train and validation (80/20)
-split_idx = int(len(shuffled_data) * 0.8)
-train_split = shuffled_data[:split_idx].reset_index(drop=True)
-val_split = shuffled_data[split_idx:].reset_index(drop=True)
+# Stratified split to ensure balanced train/val distribution
+train_split, val_split = train_test_split(
+    shuffled_data, 
+    test_size=0.2, 
+    random_state=42, 
+    stratify=shuffled_data['label']  # Ensure balanced label distribution
+)
+train_split = train_split.reset_index(drop=True)
+val_split = val_split.reset_index(drop=True)
 
 with open(os.path.join(data_dir, 'vocab_dict.json'), 'r') as file:
     vocab_dict = json.load(file)
@@ -65,9 +72,9 @@ def train():
     dict_size = len(vocab_dict)
     category_size = len(subject_dict)
 
-    model = NewsPredictor(dict_size, category_size, hidden_dim=128, num_layers=2, dropout=0.5).to(device)
+    model = NewsPredictor(dict_size, category_size, hidden_dim=128, num_layers=2, dropout=0.7).to(device)
     criterion = nn.BCELoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.00001)  # Much lower learning rate to prevent collapse
+    optimizer = optim.Adam(model.parameters(), lr=0.000001)  # Much lower learning rate to prevent collapse
 
     train_dataset = NewsDataset(train_split)
     val_dataset = NewsDataset(val_split)
@@ -169,6 +176,44 @@ def train():
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     torch.save(model.state_dict(), model_path)
     print(f'Model saved to {model_path}')
+    
+    # Evaluate on actual test set
+    print('\n' + '=' * 50)
+    print('Evaluating on Test Set')
+    print('=' * 50)
+    
+    fake_test = pd.read_csv(os.path.join(id_data_dir, 'FakeIDTest.csv'))
+    true_test = pd.read_csv(os.path.join(id_data_dir, 'TrueIDTest.csv'))
+    test_data = pd.concat([fake_test, true_test], ignore_index=True)
+    test_dataset = NewsDataset(test_data)
+    test_dataloader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, collate_fn=collate_fn, num_workers=0)
+    
+    model.eval()
+    test_losses = []
+    test_preds = []
+    test_labels_list = []
+    
+    with torch.no_grad():
+        for titles, texts, subjects, labels in test_dataloader:
+            titles = titles.to(device)
+            texts = texts.to(device)
+            subjects = subjects.to(device)
+            labels = labels.to(device)
+            
+            outputs = model(titles, texts, subjects)
+            loss = criterion(outputs, labels)
+            test_losses.append(loss.item())
+            test_preds.extend(outputs.cpu().numpy())
+            test_labels_list.extend(labels.cpu().numpy())
+    
+    test_preds_tensor = (torch.tensor(test_preds) > 0.5).float()
+    test_labels_tensor = torch.tensor(test_labels_list)
+    test_acc = (test_preds_tensor == test_labels_tensor).float().mean().item()
+    avg_test_loss = sum(test_losses) / len(test_losses)
+    
+    print(f'Test Loss: {avg_test_loss:.6f}')
+    print(f'Test Accuracy: {test_acc:.4f} ({test_acc*100:.2f}%)')
+    print('=' * 50)
 
 if __name__ == '__main__':
     train()
