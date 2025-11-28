@@ -33,7 +33,7 @@ def get_maximum(data_path):
 
 def get_id(string, vocab_dict, max_len):
     result = []
-    array = get_list(string)
+    array = get_list(string)[:max_len]
     for item in array:
         key = '<UNK>'
         if item in vocab_dict:
@@ -72,8 +72,10 @@ def main():
         vocab_dict = json.load(file)
     with open('subject_dict.json', 'r') as file:
         subject_dict = json.load(file)
-    
-    title_len, text_len = get_maximum('TrainingData.csv') 
+
+    title_len, text_len = get_maximum('TrainingData.csv')
+    title_len = min(title_len, 64)
+    text_len = min(text_len, 1024)
 
     create_json('FakeTrain.csv', 'FakeIDTrain.csv', vocab_dict, subject_dict, title_len, text_len, 0)
     create_json('FakeTest.csv', 'FakeIDTest.csv', vocab_dict, subject_dict, title_len, text_len, 0)
