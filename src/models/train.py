@@ -4,12 +4,17 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import pandas as pd
 import json
-from src.models.model import NewsPredictor
 import os
 from sklearn.model_selection import train_test_split
 
+from src.models.model import NewsPredictor
+from src.models.model2 import NewsPredictorCNN
+
+MODEL_VARIANT = os.environ.get('MODEL_VARIANT', 'lstm').lower()
+
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print(f'Using device: {device}')
+print(f'Model variant: {MODEL_VARIANT}')
 
 data_dir = 'src/data'
 id_data_dir = os.path.join(data_dir, 'ID-data')
@@ -35,7 +40,7 @@ with open(os.path.join(data_dir, 'subject_dict.json'), 'r') as file:
     subject_dict = json.load(file)
 
 num_epochs = 10
-batch_size = 32  
+batch_size = 16  
 
 class NewsDataset(Dataset):
     def __init__(self, dataframe):
@@ -67,7 +72,10 @@ def collate_fn(batch):
 def train():
     dict_size = len(vocab_dict)
 
-    model = NewsPredictor(dict_size, hidden_dim=128, num_layers=2, dropout=0.5).to(device)
+    if MODEL_VARIANT == 'cnn':
+        model = NewsPredictorCNN(dict_size, embedding_dim=128, conv_filters=64, dropout=0.5).to(device)
+    else:
+        model = NewsPredictor(dict_size, hidden_dim=128, num_layers=2, dropout=0.5).to(device)
     criterion = nn.BCELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.00001, weight_decay=1e-5)
     scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2)
@@ -161,7 +169,8 @@ def train():
         
         print(f'Epoch: {epoch:3d} | Train Loss: {avg_train_loss:.6f} | Train Acc: {train_acc:.4f} | Val Loss: {avg_val_loss:.6f} | Val Acc: {val_acc:.4f} | LR: {optimizer.param_groups[0]["lr"]:.8f}')
     
-    model_path = 'src/models/NewsPredictor.pth'
+    model_filename = f'NewsPredictor_{MODEL_VARIANT}.pth'
+    model_path = os.path.join('src/models', model_filename)
     os.makedirs(os.path.dirname(model_path), exist_ok=True)
     torch.save(model.state_dict(), model_path)
     print(f'Model saved to {model_path}')
