@@ -4,6 +4,9 @@ import json
 punctuations = [' ', '.', ',', ';', ':', '(', ')', '!', '?', '"', "'", '#', '\\']
 
 def get_list(string):
+    if pd.isna(string):
+        return []
+    string = str(string)
     lowercase = string.lower()
     actual_word = ''
     for i in range(len(lowercase)):
@@ -48,16 +51,15 @@ def create_json(data_path, save_path, vocab_dict, subject_dict, title_len, text_
     result = pd.DataFrame(columns=['title_id', 'text_id', 'subject_id', 'label'])
 
     data = pd.read_csv(data_path)
-    vocab_columns = ['title', 'text']
-    subject_columns = ['subject']
-
+    
     for index, row in data.iterrows():
         title_id = get_id(row['title'], vocab_dict, title_len)
         text_id = get_id(row['text'], vocab_dict, text_len)
         
         subject_key = '<UNK>'
-        if row['subject'] in subject_dict:
-            subject_key = row['subject']
+        if 'subject' in row and pd.notna(row['subject']):
+            if row['subject'] in subject_dict:
+                subject_key = row['subject']
         subject_id = subject_dict[subject_key]
 
         result.loc[index] = [title_id, text_id, subject_id, label_val]
