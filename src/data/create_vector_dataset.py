@@ -29,6 +29,8 @@ def get_maximum(data_path):
         text_list = get_list(row['text'])
         if len(text_list) > text_len:
             text_len = len(text_list)
+    title_len = min(title_len, 64)
+    text_len = min(text_len, 1024)
     return title_len, text_len
 
 def get_id(string, vocab_dict, max_len):
@@ -74,8 +76,6 @@ def main():
         subject_dict = json.load(file)
 
     title_len, text_len = get_maximum('TrainingData.csv')
-    title_len = min(title_len, 64)
-    text_len = min(text_len, 1024)
 
     create_json('FakeTrain.csv', 'FakeIDTrain.csv', vocab_dict, subject_dict, title_len, text_len, 0)
     create_json('FakeTest.csv', 'FakeIDTest.csv', vocab_dict, subject_dict, title_len, text_len, 0)
