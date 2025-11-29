@@ -1,4 +1,53 @@
-venv/
+# Python
 __pycache__/
-*.csv
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Virtual Environment
+venv/
+env/
+ENV/
+.venv
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# PyTorch / ML Models
 *.pth
+*.pt
+*.ckpt
+*.h5
+*.pkl
+
+# CSV Files
+*.csv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Results/Outputs (optional - uncomment if you don't want to track results)
+# results/
+# *.png
+# *.jpg
+
+# Logs
+*.log
+logs/
+
+# Environment variables
+.env
+.env.local
