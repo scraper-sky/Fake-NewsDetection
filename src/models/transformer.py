@@ -7,8 +7,8 @@ class Transformer(nn.Module):
         super().__init__()
         self.encoder = DistilBertModel.from_pretrained('distilbert-base-uncased')
 
-        for parameter in self.encoder.parameters():
-            parameter.requires_grad = False
+        # for parameter in self.encoder.parameters():
+        #     parameter.requires_grad = False
 
         self.fc = nn.Linear(768, 1)
         

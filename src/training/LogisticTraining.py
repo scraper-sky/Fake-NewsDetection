@@ -50,7 +50,7 @@ def get_set_split():
 def get_data_loaders():
     train_set, dev_set, test_set = get_set_split()
 
-    vectorizer = CountVectorizer(max_features=30)
+    vectorizer = CountVectorizer(max_features=100)
     train_features = vectorizer.fit_transform(train_set['combined'].tolist())
     dev_features = vectorizer.transform(dev_set['combined'].tolist())
     test_features = vectorizer.transform(test_set['combined'].tolist())
@@ -214,7 +214,7 @@ def best_threshold(thresholds, total_accuracy):
 def main():
     model = MODEL
     model.to(DEVICE)
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=0.005)
     criterion = nn.BCELoss()
 
     train_loader, dev_loader, test_loader = get_data_loaders()

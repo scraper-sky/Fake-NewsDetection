@@ -17,8 +17,8 @@ else:
     DEVICE = torch.device("cpu")
 
 BATCH_SIZE = 64
-EPOCHS = 15
-LEARNING_RATE = 0.00002
+EPOCHS = 30
+LEARNING_RATE = 0.0001
 DATA_TRUE_PATH = 'NewsDataset/true_processed.csv'
 DATA_FAKE_PATH = 'NewsDataset/fake_processed.csv'
 SAVE_PATH = 'results/CNN/'
@@ -201,7 +201,7 @@ def best_threshold(thresholds, total_accuracy):
 def main():
     model = MODEL
     model.to(DEVICE)
-    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE)
+    optimizer = optim.Adam(model.parameters(), lr=LEARNING_RATE, weight_decay=0.005)
     criterion = nn.BCELoss()
 
     train_loader, dev_loader, test_loader = get_data_loaders()
