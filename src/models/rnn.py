@@ -10,9 +10,9 @@ class RNN(nn.Module):
 
     def forward(self, x):
         x1 = self.embedding(x)
-        outputs, hiddens = self.lstm(x1)
-        final_output = outputs[:, -1, :]
-        x2 = final_output
+        outputs, _ = self.lstm(x1)
+        max_pooled, _ = torch.max(outputs, dim=1)
+        x2 = max_pooled
         x3 = self.fc(x2)
         return torch.sigmoid(x3)
     

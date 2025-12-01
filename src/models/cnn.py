@@ -4,12 +4,12 @@ import torch.nn as nn
 class CNN(nn.Module):
     def __init__(self):
         super().__init__()
-        self.embedding = nn.Embedding(num_embeddings=30522, embedding_dim=256)
-        self.conv1 = nn.Conv1d(in_channels=256, out_channels=128, kernel_size=3, padding=1)
+        self.embedding = nn.Embedding(num_embeddings=30522, embedding_dim=64)
+        self.conv1 = nn.Conv1d(in_channels=64, out_channels=32, kernel_size=3, padding=1)
         self.pool1 = nn.MaxPool1d(kernel_size=2)
-        self.conv2 = nn.Conv1d(in_channels=128, out_channels=128, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv1d(in_channels=32, out_channels=32, kernel_size=3, padding=1)
         self.pool2 = nn.MaxPool1d(kernel_size=128)
-        self.fc = nn.Linear(128, 1)
+        self.fc = nn.Linear(32, 1)
         
     def forward(self, x):
         x1 = self.embedding(x).permute(0, 2, 1)
