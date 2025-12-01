@@ -275,8 +275,7 @@ def main():
     plt.savefig(SAVE_PATH + 'threshold_curve.png')
     plt.close()
 
-    selected_threshold = best_threshold(thresholds, total_accuracy)
-    tp, fp, tn, fn = category_count(model, test_loader, selected_threshold, DEVICE)
+    tp, fp, tn, fn = category_count(model, test_loader, 0.5, DEVICE)
     matrix = np.array([[tp, fn], [fp, tn]])
     plt.figure(figsize=(7, 7))
     plt.imshow(matrix, cmap='Blues')
@@ -288,8 +287,10 @@ def main():
             plt.text(j, i, matrix[i, j], ha='center', va='center', color='black')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
-    title_string = 'Confusion Matrix With Best Threshold = ' + str(selected_threshold)
+    # title_string = 'Confusion Matrix With Best Threshold = ' + str(selected_threshold)
+    title_string = 'Confusion Matrix'
     plt.title(title_string)
+    plt.tight_layout()
     plt.savefig(SAVE_PATH + 'confusion_matrix.png')
     plt.close()
     
