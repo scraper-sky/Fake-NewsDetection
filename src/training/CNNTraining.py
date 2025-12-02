@@ -21,7 +21,7 @@ EPOCHS = 30
 LEARNING_RATE = 0.0001
 DATA_TRUE_PATH = 'NewsDataset/true_processed.csv'
 DATA_FAKE_PATH = 'NewsDataset/fake_processed.csv'
-SAVE_PATH = 'results/CNN/'
+SAVE_PATH = 'NewsResults/CNN/'
 MODEL_NAME = 'CNN.pth'
 TOKENIZER = DistilBertTokenizer.from_pretrained('distilbert-base-uncased')
 MODEL = CNN()
@@ -274,9 +274,7 @@ def main():
             plt.text(j, i, matrix[i, j], ha='center', va='center', color='black')
     plt.xlabel('Predicted')
     plt.ylabel('Actual')
-    # title_string = 'Confusion Matrix With Best Threshold = ' + str(selected_threshold)
-    title_string = 'Confusion Matrix'
-    plt.title(title_string)
+    plt.title('Confusion Matrix')
     plt.tight_layout()
     plt.savefig(SAVE_PATH + 'confusion_matrix.png')
     plt.close()

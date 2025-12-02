@@ -21,7 +21,7 @@ EPOCHS = 30
 LEARNING_RATE = 0.0001
 DATA_TRUE_PATH = 'NewsDataset/true_processed.csv'
 DATA_FAKE_PATH = 'NewsDataset/fake_processed.csv'
-SAVE_PATH = 'results/LogisticRegression/'
+SAVE_PATH = 'NewsResults/LogisticRegression/'
 MODEL_NAME = 'LogisticRegression.pth'
 MODEL = LogisticRegression()
     
