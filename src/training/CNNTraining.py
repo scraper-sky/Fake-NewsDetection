@@ -189,15 +189,6 @@ def category_count(model, test_loader, threshold, device):
 
     return tp, fp, tn, fn
 
-def best_threshold(thresholds, total_accuracy):
-    best_threshold = 0
-    best_accuracy = 0
-    for i in range(len(thresholds)):
-        if total_accuracy[i] >= best_accuracy:
-            best_accuracy = total_accuracy[i]
-            best_threshold = thresholds[i]
-    return best_threshold
-
 def main():
     model = MODEL
     model.to(DEVICE)
