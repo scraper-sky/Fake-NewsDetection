@@ -16,7 +16,7 @@ if GPU_status:
 else:
     DEVICE = torch.device("cpu")
 
-BATCH_SIZE = 64
+BATCH_SIZE = 32
 EPOCHS = 30
 LEARNING_RATE = 0.0001
 DATA_TRUE_PATH = 'NewsDataset/true_processed.csv'

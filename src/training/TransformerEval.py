@@ -60,7 +60,7 @@ def main():
     tp, fp, tn, fn = category_count(model, test_loader, 0.5, DEVICE)
     matrix = np.array([[tp, fn], [fp, tn]])
     plt.figure(figsize=(7, 7))
-    plt.imshow(matrix, cmap='Blues')
+    plt.imshow(matrix, cmap='Blues', alpha=0.75)
     plt.colorbar()
     plt.xticks([0, 1], ['Predicted Positive', 'Predicted Negative'])
     plt.yticks([0, 1], ['Actual Positive', 'Actual Negative'])
